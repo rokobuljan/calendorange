@@ -84,13 +84,16 @@ S.dayNames = temp_dayNames.concat(S.dayNames);
 
 function inArray(k, a) {
     for (var i = 0; i < a.length; i++)
-        if (a[i] === k)
+        if (a[i] === k) {
             return true;
-    return false;
+        } else {
+            return false;
+        }
 }
 
 function getMonthFirstWeekDayNum(m, y) { // Returns: 0..6 where 0=firstWeekDay
-    return (new Date((m + 1) + ' 1,' + y).getDay() + 7 - S.firstWeekDay) % 7;
+    var firstDay = new Date( (m+1) +"/1/"+ y );
+    return (firstDay.getDay() + 7 - S.firstWeekDay) % 7;
 }
 
 function getMonthTotDays(m, y) {
@@ -102,18 +105,25 @@ function toDateFormat(d, m, y) {
     return (d > 9 ? d : "0" + d) + "." + (m > 9 ? m : "0" + m) + "." + y;
 }
 
+
+
 function HTML_month(m, y) {
+
     var mfdn = getMonthFirstWeekDayNum(m, y);
     var mtot = getMonthTotDays(m, y);
     var monthClass = "calendar_month" + (mfdn > 0 ? " calendar_month_overlap" : "");
     var MONTH = "<div class='" + monthClass + "' data-month-label='" + S.monthNames[m].slice(0, 3) + " " + y + "'><ul class='calendar_week'>";
 
+    //console.log(mfdn);
 
     for (var _d = mfdn; _d < mtot + mfdn; _d++) {
+
 
         var d = _d - mfdn + 1;
         var _d7 = _d % 7;
         var isToday = d === now.date && m === now.month && y === now.year;
+        
+            console.log(d);
 
         if (isToday) {
             beforeStartDate = false;
@@ -131,8 +141,8 @@ function HTML_month(m, y) {
                 (inArray(_d7, S.disabledWeekDays) || beforeStartDate ? " calendar_day_disabled" : " calendar_day_enabled");
 
         var liHTML = "<span class='calendar_day_month'>" + S.monthNames[m].slice(0, 3) + "</span>" +
-                "<span class='calendar_day_date'>" + d + "</span>" +
-                "<span class='calendar_day_year'>" + y + "</span>";
+                "<span class='calendar_day_year'>" + y + "</span>" +
+                "<span class='calendar_day_date'>" + d + "</span>";
 
         MONTH += "<li class='" + dayClass + "' data-date-formatted='" + toDateFormat(d, m, y) + "' data-date-d='" + d + "' data-date-m='" + m + "' data-date-y='" + y + "' >" + liHTML + "</li>";
     }
@@ -231,12 +241,12 @@ $calMs.on("mousedown.calendar", ".calendar_day_enabled:not(.calendar_day_range_d
     }
 });
 
-
+// /////
 // Range Hover styles
 var $rangeHoverDays,
         rangeHoverArray = [],
         c = 0, d = 0;
-$calMs.on("mouseenter.calendar", ".calendar_day_enabled:not(.calendar_day_range_disabled)", function () {
+$calMs.on("mouseenter.calendar", ".calendar_day_enabled:not(.calendar_day_range_disabled, .calendar_day_active)", function () {
     if (!range) {
         return;
     }

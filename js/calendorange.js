@@ -34,8 +34,6 @@ function newDate(date, modifiers, weekday) {
     }
     return date;
 }
-
-
 var $cal = $(".calendar"),
         $calWd = $cal.find(".calendar_weekdays"),
         $calMs = $cal.find(".calendar_months"),
@@ -44,13 +42,15 @@ var $cal = $(".calendar"),
 var S = {
     monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     dayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-    disabledWeekDays: [/*0,1,2,3,4,6*/],
+    disabledWeekDays: [0, 1, 2, 3, 4, 6],
     firstWeekDay: 1, // 0=Sunday, 1=Monday...
-    minDate: newDate("", "", "5"), // Date Obj
-    maxDate: newDate("", "+1y"), // Date Obj
+    dateMin: newDate("", "", "5"), // Date Obj
+    dateMax: newDate("", "+1y"), // Date Obj
+    dateSelected: newDate("", "", "6"),
+    dateRange: "",
     rangeMax: 28,
-    defaultSelected: new Date(),
     onRangeStart: function (rangeArray) {
+        //console.dir(rangeArray);
         $(".NS_periodFrom").val(rangeArray[0].dateFormatted);
         $(".NS_periodTo").val("");
         var fmt = rangeArray[0].dateFormatted + " → ";
@@ -67,10 +67,9 @@ var S = {
         //
         $(".periodFrom").html(rangeArray[0].dateD + '. ' + this.monthNames[rangeArray[0].dateM] + ' ' + rangeArray[0].dateY);
         $(".periodTo").html(rangeArray[1].dateD + '. ' + this.monthNames[rangeArray[1].dateM] + ' ' + rangeArray[1].dateY);
-    },
+    }
 };
 
-//S.startDate = S.startDate ? new Date(S.startDate) : new Date();
 var dateNow = new Date();
 var now = {
     date: dateNow.getDate(),
@@ -83,16 +82,16 @@ var temp_dayNames = S.dayNames.splice(S.firstWeekDay, 6);
 S.dayNames = temp_dayNames.concat(S.dayNames);
 
 function inArray(k, a) {
-    for (var i = 0; i < a.length; i++)
+    for (var i = 0; i < a.length; i++) {
         if (a[i] === k) {
             return true;
-        } else {
-            return false;
         }
+    }
+    return false;
 }
 
 function getMonthFirstWeekDayNum(m, y) { // Returns: 0..6 where 0=firstWeekDay
-    var firstDay = new Date( (m+1) +"/1/"+ y );
+    var firstDay = new Date((m + 1) + "/1/" + y);
     return (firstDay.getDay() + 7 - S.firstWeekDay) % 7;
 }
 
@@ -114,7 +113,7 @@ function HTML_month(m, y) {
     var monthClass = "calendar_month" + (mfdn > 0 ? " calendar_month_overlap" : "");
     var MONTH = "<div class='" + monthClass + "' data-month-label='" + S.monthNames[m].slice(0, 3) + " " + y + "'><ul class='calendar_week'>";
 
-    //console.log(mfdn);
+    console.log(mfdn);
 
     for (var _d = mfdn; _d < mtot + mfdn; _d++) {
 
@@ -122,8 +121,6 @@ function HTML_month(m, y) {
         var d = _d - mfdn + 1;
         var _d7 = _d % 7;
         var isToday = d === now.date && m === now.month && y === now.year;
-        
-            console.log(d);
 
         if (isToday) {
             beforeStartDate = false;
@@ -158,20 +155,31 @@ $calWd.append(html);
 
 
 
+
+
+
 function HTML_months() {
-    var HTML = "";
-    var aM = S.minDate.getMonth(),
-            aY = S.minDate.getFullYear();
-    while (aM <= S.maxDate.getMonth() || aY < S.maxDate.getFullYear()) {
+    var supermax = 0,
+            HTML = "",
+            aM = S.dateMin.getMonth(),
+            aY = S.dateMin.getFullYear(),
+            bM = S.dateMax.getMonth(),
+            bY = S.dateMax.getFullYear();
+
+    while (aY < bY || aM < bM && supermax < 200)
+    {
         HTML += HTML_month(aM, aY);
-        ++aM;
-        if (aM === 12) {
-            aM %= 12;
-            aY += 1;
-        }
-        ;
+        //console.log(am +' '+ ay);
+        aM = ++aM % 12;
+        if (!aM)
+            ++aY;
+
+        supermax++;
     }
+
     $calMs.append(HTML);
+
+
 }
 HTML_months();
 
@@ -193,8 +201,9 @@ var $inRange;
 // /////
 // Selection
 $calMs.on("mousedown.calendar", ".calendar_day_enabled:not(.calendar_day_range_disabled)", function () {
-    if ($lastSelected)
+    if ($lastSelected) {
         $lastSelected.not(this).removeClass("calendar_day_active");
+    }
     $lastSelected = $(this);
     $lastSelected.addClass("calendar_day_active");
 });
@@ -264,8 +273,8 @@ $calMs.on("mouseenter.calendar", ".calendar_day_enabled:not(.calendar_day_range_
 });
 
 
-if (!!S.defaultSelected) {
-    var _formattedDate = toDateFormat(S.defaultSelected.getDate(), S.defaultSelected.getMonth(), S.defaultSelected.getFullYear());
+if (!!S.dateSelected) {
+    var _formattedDate = toDateFormat(S.dateSelected.getDate(), S.dateSelected.getMonth(), S.dateSelected.getFullYear());
     //console.log(_formattedDate);
     $("[data-date-formatted='" + _formattedDate + "']").trigger("mousedown.calendar");
 }

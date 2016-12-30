@@ -29,8 +29,13 @@ STYLING INFO:
 LI background: style the LI's :before pseudo
 /////*/
 
-$color-1 : #103040;
-$color-2 : rgba(240,120,100,1);
+
+$calendar-color: #E86850;
+$calendar-month-border : 1px;
+$calendar-cell-size: 44px;
+$calendar-radius: 3px;
+$calendar-selection-radius: 50px;
+
 
 .calendar{
 
@@ -39,20 +44,20 @@ $color-2 : rgba(240,120,100,1);
     top:50%;
     left:50%;
     transform: translate(-50%, -50%);
-    min-width:280px;
-    max-width:360px;
     background:#fff;
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    border-radius: $calendar-radius;    
 
+    
     ul{
         padding:0;
         width:100%;
         list-style:none;
+        white-space:nowrap; 
         li{
             position:relative;
             display:inline-block;
             text-align:center;
-            width: 14.285%;
         }
     }
 
@@ -68,7 +73,7 @@ $color-2 : rgba(240,120,100,1);
 .calendar_header{
     position: relative;
     padding: 16px 16px;
-    background: $color-2;
+    background: $calendar-color;
     color: rgba(255,255,255,0.9);
 }
 
@@ -76,12 +81,14 @@ $color-2 : rgba(240,120,100,1);
 
 ul.calendar_weekdays{
 
-    background: rgba($color-2, 0.8);
+    background: rgba($calendar-color, 0.7);
     color: #fff;
     //padding-right: 17px;
     li{
+        width: $calendar-cell-size;
         padding:8px 0; 
         font-size:12px;
+        white-space:nowrap;
     }
 }
 
@@ -89,7 +96,6 @@ ul.calendar_weekdays{
 
     //position:relative;
     height:280px;
-    width: calc(100% + 17px);
     overflow-x:hidden;
     overflow-y:scroll;
 
@@ -109,8 +115,9 @@ ul.calendar_weekdays{
         box-shadow: none !important;
     }
 
+    // EVERY SECOND MONTH BACKGROUNDS
     &:nth-child(even) li{
-        z-index:1;
+        //z-index:1;
         &:before{
             content:"";
             position:absolute;
@@ -123,23 +130,27 @@ ul.calendar_weekdays{
         }
     }
 
-    ul:first-of-type{
+    ul:first-child{
         text-align:right;
         li{
             // TOP "MONTH" BORDER
-            box-shadow: inset 0 1px 0 rgba(0,0,0, 0.2);
+            box-shadow: inset 0 $calendar-month-border 0 rgba(0,0,0, 0.2);
         }
     }
 
-    ul:last-of-type{
+    ul:last-child{
         li{
             // BOTTOM "MONTH" BORDER
-            box-shadow: inset 0 -1px 0 rgba(0,0,0, 0.2);
+            box-shadow: inset 0 (-$calendar-month-border) 0 rgba(0,0,0, 0.2);
             z-index:1; /* Go over overlapping month */
             &:last-of-type{
                 // VERTICAL "MONTH" BORDER
-                box-shadow: inset 0px -1px 0 rgba(0,0,0, 0.2),
-                    inset -1px 0px 0 rgba(0,0,0, 0.2);                  
+                box-shadow: inset 0px (-$calendar-month-border) 0 rgba(0,0,0, 0.2),
+                    inset (-$calendar-month-border) 0px 0 rgba(0,0,0, 0.2);
+            }
+            &:nth-child(7){
+                // If it's the last cell don't paint the right vertical border
+                box-shadow: inset 0px (-$calendar-month-border) 0 rgba(0,0,0, 0.2), none !important;
             }
         }
     }
@@ -167,7 +178,7 @@ ul.calendar_weekdays{
         text-align:left;
         text-indent: -5px;
         background:rgba(255,255,255,0.9);
-        color: rgba($color-2, 1);
+        color: rgba($calendar-color, 1);
         transition: 0.3s;
         visibility:hidden;
         opacity:0;
@@ -179,7 +190,7 @@ ul.calendar_weekdays{
 // /////
 // DAYS
 li.calendar_day{
-
+    position:relative;
     text-align:center;
     // All spans inside day
     > span {
@@ -187,31 +198,35 @@ li.calendar_day{
         z-index:5;
         display:inline-block;
     }
-    span.calendar_day_date{
-        width:40px;
-        height:40px;
-        line-height:40px;
-        border-radius: 50%;
+    > span.calendar_day_date{
+        width: $calendar-cell-size;
+        height: $calendar-cell-size;
+        line-height: $calendar-cell-size;
+        border-radius: $calendar-selection-radius;
     }
-    span.calendar_day_month{
+    > span.calendar_day_month{
         position:absolute;
+        z-index:6;
         top:2px;
         width:100%;
         font-size:9px;
         display:none;
     }
-    span.calendar_day_year{
+    > span.calendar_day_year{
         position:absolute;
+        z-index:6;
         bottom:2px;
         width:100%;
         font-size:9px;
         display:none;
     }
 
+    // FIRST DAY OF THE CALENDAR SHOWING MONTH AND YEAR
     &.calendar_day_1{
         span.calendar_day_month{display:block;}
         span.calendar_day_year {display:block;}
     }
+
 
     // COLOR WEEKEND BACKGROUNDS
     &.calendar_day_weekend{
@@ -219,7 +234,7 @@ li.calendar_day{
     }
     &.calendar_day_today{
         span.calendar_day_date{
-            box-shadow: inset 0 0 0 1px $color-2;
+            box-shadow: inset 0 0 0 1px $calendar-color;
         }
     }
 
@@ -227,33 +242,37 @@ li.calendar_day{
     &.calendar_day_range_disabled{
         cursor: normal;
         span{
-            opacity:0.95;
+            opacity:1;
         }
         span.calendar_day_date{
             opacity:0.3;
         }
     }
 
+    // ENABLED DAYS STYLES (can be selected)
     &.calendar_day_enabled{
+
+        cursor:pointer;
+
         &.calendar_day_active,
         &.calendar_day_selected_first,
         &.calendar_day_selected_last{
             color:#fff;
             span.calendar_day_date,
             span.calendar_day_date:hover{
-                background: rgba($color-2, 0.8);
+                background: rgba($calendar-color, 0.8);
             }
         }
 
-        span.calendar_day_date{
-            cursor:pointer;
-            &:hover{
-                background:rgba(0,0,0,0.1);
-            }    
+        &:hover span.calendar_day_date{
+            background:rgba(0,0,0,0.1);
         }
     }
 
+    // ACTIVE STYLES
+    &.calendar_day_active{
 
+    }
 
 
     // RANGE and selection Layer
@@ -268,22 +287,21 @@ li.calendar_day{
         background: transparent;
     }
 
-    // SELECTED Layer styles
     &.calendar_day_selected:after{
-        background: rgba($color-2, 0.3);
+        background: rgba($calendar-color, 0.3);
     }
 
     // HOVER Layer styles
     &.calendar_day_range_hover:after{
-        background:rgba($color-2, 0.1);
+        background:rgba($calendar-color, 0.1);
     }
     &.calendar_day_selected_first:after,
         &.calendar_day_range_first:after{
-        border-radius: 50px 0 0 50px;
+        border-radius: $calendar-selection-radius 0 0 $calendar-selection-radius;
     }
     &.calendar_day_selected_last:after,
         &.calendar_day_range_last:after{
-        border-radius: 0 50px 50px 0;
+        border-radius: 0 $calendar-selection-radius $calendar-selection-radius 0;
     }
 
 }
